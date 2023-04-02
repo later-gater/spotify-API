@@ -18,3 +18,10 @@ username = "SPOTIFY USERNAME/EMAIL"
 password = "SPOTIFY PASSWORD"
 webdriverLocation = r"CHROME WEBDRIVER PATH"
  ```
+ ### Planned Development
+- display current song
+- display current playlist
+- display errors
+- skip song button
+- last song button
+- shuffle button
