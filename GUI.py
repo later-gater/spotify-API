@@ -2,6 +2,9 @@ import PySimpleGUI as sg
 import threading
 import spotify
 import credentials
+from time import sleep
+
+
 
 def checkAdWatchOnce():
     for threads in threading.enumerate():
@@ -25,6 +28,25 @@ def checkAdWatchProcess(ad_watch, window):
             
         ad_watch.pop(0)
 
+def checkError(errors):
+    for i in errors.values():
+        if i[0] > 0:
+            i[0] -= 0.5
+            return i
+    return None
+
+def checkAndDisplayError(errors, window):
+
+    while True:
+        
+        if checkError(errors) != None:
+            window["-ERROR-"].update(f"ERROR: {checkError(errors)[1]}")
+        else: 
+            window["-ERROR-"].update("")
+
+        sleep(1)
+
+
 def main():
     music = spotify.Spotify()
     print(music)
@@ -37,7 +59,8 @@ def main():
     sg.set_options(font="Helvetica", margins=(10, 10))
 
     layout = [[sg.Text(size=(15, 1), key="-ENABLED-")],
-               [sg.Button('Play/Pause', button_color="Green", key='-PLAY-'), sg.Button('AdWatch', button_color="Green", key='-AD-')]]
+               [sg.Button('Play/Pause', button_color="Green", key='-PLAY-'), sg.Button('AdWatch', button_color="Green", key='-AD-')],
+               [sg.Text(key="-ERROR-", text_color=("Red"))]]
     
     window = sg.Window("Spotify", layout, finalize=True)
 
@@ -46,6 +69,10 @@ def main():
     ads = [False]
     ad_watch_watcher = threading.Thread(target=checkAdWatchProcess, args=(ads, window), name="adWatchWatch", daemon=True)
     ad_watch_watcher.start()
+
+    errors = {}
+    error_checker = threading.Thread(target=checkAndDisplayError, args=(errors, window), name="ErrorChecker", daemon=True)
+    error_checker.start()
     
     while True: # event loop
         event, values = window.read()
@@ -57,7 +84,7 @@ def main():
         if event == '-AD-':
             print(f"ad_watch_enabled: {ad_watch_enabled}, ad_watch[0]: {ads[0]}")
             if ads[0] == False: # enable ad watch
-                tmp = threading.Thread(target=music.adWatch, args=(lambda: not ad_watch_enabled,), name="adWatch")
+                tmp = threading.Thread(target=music.adWatch, args=(lambda: not ad_watch_enabled, errors), name="adWatch", daemon=True)
                 tmp.start()
                 ad_watch_enabled = True
             else: # disable ad watch
