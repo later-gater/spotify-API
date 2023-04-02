@@ -2,16 +2,16 @@
  
  Allows you to control certain Spotify actions through a Python API
  
- ###Actions include:
+ ### Actions include:
  - Playing/Pausing current song
  - Skipping ads
 
- ###Requirements:
+ ### Requirements:
  - Chrome webdriver
  - Selenium
  - PySimpleGUI
 
- ###Credentials
+ ### Credentials
  You must create a file called "credentials.py" that includes:
  ```
 username = "SPOTIFY USERNAME/EMAIL"
