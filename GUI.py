@@ -40,7 +40,7 @@ def checkAndDisplayError(errors, window):
     while True:
         
         if checkError(errors) != None:
-            window["-ERROR-"].update(f"ERROR: {checkError(errors)[1]}")
+            window["-ERROR-"].update(checkError(errors)[1])
         else: 
             window["-ERROR-"].update("")
 
@@ -59,12 +59,13 @@ def main():
     sg.set_options(font="Helvetica", margins=(10, 10))
 
     layout = [[sg.Text(size=(15, 1), key="-ENABLED-")],
-               [sg.Button('Play/Pause', button_color="Green", key='-PLAY-'), sg.Button('AdWatch', button_color="Green", key='-AD-')],
+               [sg.Button('Play/Pause', button_color="Green", key='-PLAY-'), sg.Button('AdWatch', button_color="Green", key='-AD-'), sg.Button("Spam (DEBUG)", button_color="Green", key='-SPAM-')],
                [sg.Text(key="-ERROR-", text_color=("Red"))]]
     
     window = sg.Window("Spotify", layout, finalize=True)
 
     ad_watch_enabled = False
+    spamming = False
 
     ads = [False]
     ad_watch_watcher = threading.Thread(target=checkAdWatchProcess, args=(ads, window), name="adWatchWatch", daemon=True)
@@ -88,9 +89,17 @@ def main():
                 tmp.start()
                 ad_watch_enabled = True
             else: # disable ad watch
+                errors[len(errors)] = [5, "Disabling Ad Watch"]
                 ad_watch_enabled = False
         if event == '-PLAY-':
             music.playSong()
+        if event == '-SPAM-':
+            if spamming == False:
+                tmp = threading.Thread(target=music.spamSkip, args=(lambda: not spamming,), daemon=True, name="SPAM!")
+                tmp.start()
+                spamming = True
+            else:
+                spamming = False
         
         
 

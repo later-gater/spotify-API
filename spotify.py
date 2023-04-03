@@ -70,6 +70,15 @@ class Spotify():
         wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='main']/div/div[2]/div[2]/footer/div/div[2]/div/div[1]/div[2]/button[1]"))).click()
         print("song skipped")
 
+    def spamSkip(self, stop):
+        while True:
+            try:
+                self.skipSong()
+            except:
+                pass
+            if stop():
+                return
+
     def backSong(self):
         self.driver.find_element(By.XPATH, "//*[@id='main']/div/div[2]/div[2]/footer/div/div[2]/div/div[1]/div[1]/button[2]").click()
 
@@ -98,7 +107,7 @@ class Spotify():
             playlistURL = self.driver.current_url
             if playlistURL == "https://open.spotify.com/":
                 print("ERROR. PLEASE SELECT A PLAYLIST BEFORE STARTING ADWATCH")
-                errors[len(errors)] = [10, "Please select a playlist before starting AdWatch"]
+                errors[len(errors)] = [10, "ERROR: Please select a playlist before starting AdWatch"]
                 return
             if self.waitUntilAd(stop):
                 print("AD WATCHED")
