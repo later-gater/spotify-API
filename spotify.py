@@ -48,12 +48,13 @@ class Spotify():
         self.closeFirstTab()
         print("ad skipped")
 
-    def setVolume(self):
+    def setVolume(self, volume):
         volumeXPATH = "//*[@id='main']/div/div[2]/div[2]/footer/div/div[3]/div/div[3]"
         wait = WebDriverWait(self.driver, 10)
         wait.until(EC.element_to_be_clickable((By.XPATH, volumeXPATH)))
-        self.driver.find_element(By.XPATH, volumeXPATH).click() #use action chains to move_by_offset
-        print("volume set") # TODO: Make volume customizable
+        action = ActionChains(self.driver)
+        action.move_to_element(self.driver.find_element(By.XPATH, volumeXPATH)).move_by_offset(((int(volume)/100)*(62+27))-27, 0).click().perform()
+        print("volume set to " + str(volume))
 
     def playPlaylist(self):
         buttonXPATH = "//button[@class='Button-sc-qlcn5g-0 jqMzOG']"
@@ -102,7 +103,7 @@ class Spotify():
                 else: sleep(5)
 
 
-    def adWatch(self, stop, errors):
+    def adWatch(self, stop, errors, volume):
         while not stop():
             playlistURL = self.driver.current_url
             if playlistURL == "https://open.spotify.com/":
@@ -112,10 +113,9 @@ class Spotify():
             if self.waitUntilAd(stop):
                 print("AD WATCHED")
                 self.closeReopen(playlistURL)
-                self.setVolume()
+                self.setVolume(volume())
                 self.playPlaylist()
                 self.enableShuffle()
-                sleep(1) # reduce this
                 self.skipSong()
 
 
