@@ -113,10 +113,9 @@ class Spotify():
             if self.waitUntilAd(stop):
                 print("AD WATCHED")
                 self.closeReopen(playlistURL)
-                self.setVolume(volume)
+                self.setVolume(volume())
                 self.playPlaylist()
                 self.enableShuffle()
-                sleep(1) # reduce this
                 self.skipSong()
 
 

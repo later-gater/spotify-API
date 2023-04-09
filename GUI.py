@@ -87,7 +87,7 @@ def main():
         if event == '-AD-':
             print(f"ad_watch_enabled: {ad_watch_enabled}, ad_watch[0]: {ads[0]}")
             if ads[0] == False: # enable ad watch
-                tmp = threading.Thread(target=music.adWatch, args=(lambda: not ad_watch_enabled, errors, volume), name="adWatch", daemon=True)
+                tmp = threading.Thread(target=music.adWatch, args=(lambda: not ad_watch_enabled, errors, lambda: volume), name="adWatch", daemon=True)
                 tmp.start()
                 ad_watch_enabled = True
             else: # disable ad watch
