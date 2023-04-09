@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 import threading
 import spotify
 import credentials
+from queue import Queue
 from time import sleep
 
 
@@ -35,7 +36,7 @@ def checkError(errors):
             return i
     return None
 
-def checkAndDisplayError(errors, window):
+def checkAndDisplayError(errors, window): # TODO: error with threading
 
     while True:
         
@@ -49,17 +50,15 @@ def checkAndDisplayError(errors, window):
 
 def main():
     music = spotify.Spotify()
-    print(music)
 
     music.login(credentials.username, credentials.password)
-    music.setVolume()
-
     sg.theme = "DarkTeal"
     # sg.set_global_icon() # TODO: eventually
     sg.set_options(font="Helvetica", margins=(10, 10))
 
     layout = [[sg.Text(size=(15, 1), key="-ENABLED-")],
                [sg.Button('Play/Pause', button_color="Green", key='-PLAY-'), sg.Button('AdWatch', button_color="Green", key='-AD-'), sg.Button("Spam (DEBUG)", button_color="Green", key='-SPAM-')],
+               [sg.Button("-", key="-MINUS-", button_color="Green"), sg.Text("50", key="-VOLUME-"), sg.Button("+", key="-PLUS-", button_color="Green")],
                [sg.Text(key="-ERROR-", text_color=("Red"))]]
     
     window = sg.Window("Spotify", layout, finalize=True)
@@ -67,11 +66,14 @@ def main():
     ad_watch_enabled = False
     spamming = False
 
+    volume = 50
+    music.setVolume(volume)
+
     ads = [False]
     ad_watch_watcher = threading.Thread(target=checkAdWatchProcess, args=(ads, window), name="adWatchWatch", daemon=True)
     ad_watch_watcher.start()
 
-    errors = {}
+    errors = {} # TODO: turn into a QUEUE
     error_checker = threading.Thread(target=checkAndDisplayError, args=(errors, window), name="ErrorChecker", daemon=True)
     error_checker.start()
     
@@ -85,7 +87,7 @@ def main():
         if event == '-AD-':
             print(f"ad_watch_enabled: {ad_watch_enabled}, ad_watch[0]: {ads[0]}")
             if ads[0] == False: # enable ad watch
-                tmp = threading.Thread(target=music.adWatch, args=(lambda: not ad_watch_enabled, errors), name="adWatch", daemon=True)
+                tmp = threading.Thread(target=music.adWatch, args=(lambda: not ad_watch_enabled, errors, lambda: volume), name="adWatch", daemon=True)
                 tmp.start()
                 ad_watch_enabled = True
             else: # disable ad watch
@@ -100,6 +102,23 @@ def main():
                 spamming = True
             else:
                 spamming = False
+        if event == "-MINUS-":
+            if volume > 0:
+                volume -= 10
+                setVolume = threading.Thread(target=music.setVolume, args=(volume,), name="SetVolume", daemon=True)
+                setVolume.start()
+                window["-VOLUME-"].update(str(volume))
+            else:
+                errors[len(errors)] = [2, "ERROR: Volume out of bounds"]
+        if event == "-PLUS-":
+            if volume < 100:
+                volume += 10
+                setVolume = threading.Thread(target=music.setVolume, args=(volume,), name="SetVolume", daemon=True)
+                setVolume.start()
+                window["-VOLUME-"].update(str(volume))
+            else:
+                errors[len(errors)] = [2, "ERROR: Volume out of bounds"]
+                
         
         
 
