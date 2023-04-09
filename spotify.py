@@ -103,7 +103,7 @@ class Spotify():
                 else: sleep(5)
 
 
-    def adWatch(self, stop, errors):
+    def adWatch(self, stop, errors, volume):
         while not stop():
             playlistURL = self.driver.current_url
             if playlistURL == "https://open.spotify.com/":
@@ -113,7 +113,7 @@ class Spotify():
             if self.waitUntilAd(stop):
                 print("AD WATCHED")
                 self.closeReopen(playlistURL)
-                self.setVolume()
+                self.setVolume(volume)
                 self.playPlaylist()
                 self.enableShuffle()
                 sleep(1) # reduce this
