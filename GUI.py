@@ -29,23 +29,26 @@ def checkAdWatchProcess(ad_watch, window):
             
         ad_watch.pop(0)
 
-def checkError(errors):
-    for i in errors.values():
-        if i[0] > 0:
-            i[0] -= 0.5
-            return i
-    return None
-
-def checkAndDisplayError(errors, window): # TODO: error with threading
+def errorWorker(errors, window): # TODO: error with threading
 
     while True:
-        
-        if checkError(errors) != None:
-            window["-ERROR-"].update(checkError(errors)[1])
-        else: 
-            window["-ERROR-"].update("")
 
-        sleep(1)
+        error = errors.get()
+
+        window["-ERROR-"].update(error[1])
+
+        sleep(error[0])
+
+        window["-ERROR-"].update("")
+        errors.task_done()
+
+def miscWorkerThread(actions, music):
+    """Actions include Volume, SkipSong, BackSong, EnableAdWatch"""
+    while True:
+        action = actions.get()
+
+        if action[0] == "vol":
+            music.setVolume(action[1])
 
 
 def main():
@@ -73,9 +76,13 @@ def main():
     ad_watch_watcher = threading.Thread(target=checkAdWatchProcess, args=(ads, window), name="adWatchWatch", daemon=True)
     ad_watch_watcher.start()
 
-    errors = {} # TODO: turn into a QUEUE
-    error_checker = threading.Thread(target=checkAndDisplayError, args=(errors, window), name="ErrorChecker", daemon=True)
+    errors = Queue()
+    error_checker = threading.Thread(target=errorWorker, args=(errors, window), name="ErrorChecker", daemon=True)
     error_checker.start()
+
+    actions = Queue()
+    action_doer = threading.Thread(target=miscWorkerThread, args=(actions, music), name="miscWorkerThread", daemon=True)
+    action_doer.start()
     
     while True: # event loop
         event, values = window.read()
@@ -91,7 +98,7 @@ def main():
                 tmp.start()
                 ad_watch_enabled = True
             else: # disable ad watch
-                errors[len(errors)] = [5, "Disabling Ad Watch"]
+                errors.put([5, "Disabling Ad Watch"])
                 ad_watch_enabled = False
         if event == '-PLAY-':
             music.playSong()
@@ -105,19 +112,17 @@ def main():
         if event == "-MINUS-":
             if volume > 0:
                 volume -= 10
-                setVolume = threading.Thread(target=music.setVolume, args=(volume,), name="SetVolume", daemon=True)
-                setVolume.start()
                 window["-VOLUME-"].update(str(volume))
+                actions.put(["vol", volume])
             else:
-                errors[len(errors)] = [2, "ERROR: Volume out of bounds"]
+                errors.put([2, "ERROR: Volume out of bounds"])
         if event == "-PLUS-":
             if volume < 100:
                 volume += 10
-                setVolume = threading.Thread(target=music.setVolume, args=(volume,), name="SetVolume", daemon=True)
-                setVolume.start()
                 window["-VOLUME-"].update(str(volume))
+                actions.put(["vol", volume])
             else:
-                errors[len(errors)] = [2, "ERROR: Volume out of bounds"]
+                errors.put([2, "ERROR: Volume out of bounds"])
                 
         
         

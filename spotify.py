@@ -108,7 +108,7 @@ class Spotify():
             playlistURL = self.driver.current_url
             if playlistURL == "https://open.spotify.com/":
                 print("ERROR. PLEASE SELECT A PLAYLIST BEFORE STARTING ADWATCH")
-                errors[len(errors)] = [10, "ERROR: Please select a playlist before starting AdWatch"]
+                errors.put([10, "ERROR: Please select a playlist before starting AdWatch"])
                 return
             if self.waitUntilAd(stop):
                 print("AD WATCHED")
